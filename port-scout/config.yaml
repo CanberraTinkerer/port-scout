@@ -17,7 +17,6 @@ ingress: true
 ingress_port: 5055
 panel_icon: "mdi:radar"
 panel_title: "Port Scout"
-image: "ghcr.io/canberratinkerer/port-scout-{arch}"
 options:
   port: 5055
   min_port: 8000
