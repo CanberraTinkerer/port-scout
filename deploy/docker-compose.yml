@@ -1,0 +1,13 @@
+services:
+  port-scout:
+    image: ghcr.io/canberratinkerer/port-scout:latest
+    container_name: port-scout
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PORT_SCOUT_PORT=5055
+      - PORT_SCOUT_HOST=0.0.0.0
+      - DEFAULT_MIN_PORT=8000
+      - DEFAULT_MAX_PORT=9999
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro

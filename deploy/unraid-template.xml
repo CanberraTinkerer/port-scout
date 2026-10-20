@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>port-scout</Name>
+  <Repository>ghcr.io/canberratinkerer/port-scout:latest</Repository>
+  <Registry>https://github.com/CanberraTinkerer/port-scout/pkgs/container/port-scout</Registry>
+  <Network>host</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/CanberraTinkerer/port-scout/issues</Support>
+  <Project>https://github.com/CanberraTinkerer/port-scout</Project>
+  <Overview>Network port scanner and collision-free port allocator for homelabs. Discovers active host sockets and Docker container bindings.</Overview>
+  <Category>Tools: Network:Management</Category>
+  <WebUI>http://[IP]:[PORT:5055]/</WebUI>
+  <Icon>https://raw.githubusercontent.com/CanberraTinkerer/port-scout/main/port-scout/icon.png</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText/>
+  <DonateLink/>
+  <Description>Network port scanner and collision-free port allocator for homelabs. Discovers active host sockets and Docker container bindings.</Description>
+  <Config Name="WebUI &amp; API Port" Target="PORT_SCOUT_PORT" Default="5055" Mode="" Description="Host port for Web UI and REST API" Type="Variable" Display="always" Required="true" Mask="false">5055</Config>
+  <Config Name="Min Port Range" Target="DEFAULT_MIN_PORT" Default="8000" Mode="" Description="Default lower port bound for random allocation" Type="Variable" Display="always" Required="false" Mask="false">8000</Config>
+  <Config Name="Max Port Range" Target="DEFAULT_MAX_PORT" Default="9999" Mode="" Description="Default upper port bound for random allocation" Type="Variable" Display="always" Required="false" Mask="false">9999</Config>
+  <Config Name="Docker Socket" Target="/var/run/docker.sock" Default="/var/run/docker.sock" Mode="ro" Description="Allows Port Scout to detect reserved ports on stopped and starting containers" Type="Path" Display="always" Required="true" Mask="false">/var/run/docker.sock</Config>
+</Container>

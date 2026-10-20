@@ -1,0 +1,49 @@
+# ==============================================================================
+# Home Assistant Configuration Examples for Port Scout
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. REST Sensor (Add to configuration.yaml)
+# Queries Port Scout for a verified random free port
+# ------------------------------------------------------------------------------
+rest:
+  - resource: "http://127.0.0.1:5055/api/v1/ports/random?min=8000&max=9999&protocol=tcp"
+    scan_interval: 86400 # Only updates on restart or when triggered manually
+    sensor:
+      - name: "Port Scout Suggested Port"
+        unique_id: "port_scout_suggested_port"
+        value_template: "{{ value_json.port }}"
+        json_attributes:
+          - protocol
+          - status
+          - range
+          - checked_at
+        icon: "mdi:radar"
+
+# ------------------------------------------------------------------------------
+# 2. REST Command (Add to configuration.yaml)
+# Allows automations or dashboard buttons to trigger a fresh port roll
+# ------------------------------------------------------------------------------
+rest_command:
+  port_scout_refresh:
+    url: "http://127.0.0.1:5055/api/v1/ports/random?min=8000&max=9999&protocol=tcp"
+    method: GET
+
+# ------------------------------------------------------------------------------
+# 3. Lovelace Dashboard Card (YAML mode or Manual Card in UI)
+# Displays the suggested port and provides a refresh button
+# ------------------------------------------------------------------------------
+# type: vertical-stack
+# cards:
+#   - type: entity
+#     entity: sensor.port_scout_suggested_port
+#     name: "Next Available Homelab Port"
+#     icon: mdi:ethernet
+#   - type: button
+#     name: "Roll New Free Port"
+#     icon: mdi:dice-multiple
+#     tap_action:
+#       action: call-service
+#       service: homeassistant.update_entity
+#       target:
+#         entity_id: sensor.port_scout_suggested_port

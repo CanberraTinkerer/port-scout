@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Port Scout | Homelab Port Manager</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📡</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="./static/style.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased">
+  <!-- Top Navigation -->
+  <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-xl">
+          📡
+        </div>
+        <div>
+          <h1 class="font-bold text-lg text-white leading-tight flex items-center gap-2">
+            Port Scout
+            <span class="text-xs font-normal px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700/60">v1.0.0</span>
+          </h1>
+          <p class="text-xs text-slate-400">Homelab Network Port Allocator</p>
+        </div>
+      </div>
+      
+      <!-- System Status Badges -->
+      <div class="flex items-center space-x-2 text-xs">
+        <div id="badge-docker" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-slate-800/80 border border-slate-700/60 text-slate-400">
+          <span class="w-2 h-2 rounded-full bg-slate-500" id="docker-indicator"></span>
+          <span id="docker-status">Docker Checking...</span>
+        </div>
+        <div id="badge-engine" class="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-slate-800/80 border border-slate-700/60 text-slate-400">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span id="engine-status">Engine: proc/net</span>
+        </div>
+        <button id="btn-refresh" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition" title="Refresh Port Data">
+          🔄
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-8 space-y-6">
+    <!-- Action Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <!-- Left: Random Port Allocator (2 cols) -->
+      <div class="md:col-span-2 bg-slate-900/90 border border-slate-800/90 rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between">
+        <div class="absolute -right-12 -top-12 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-base font-semibold text-white">Allocate Collision-Free Port</h2>
+              <p class="text-xs text-slate-400">Picks and verifies an unused port not bound by host sockets or Docker containers</p>
+            </div>
+            <div class="flex rounded-lg bg-slate-800/80 p-0.5 border border-slate-700/80 text-xs">
+              <button id="proto-tcp" class="px-3 py-1 rounded-md font-medium transition bg-emerald-600 text-white">TCP</button>
+              <button id="proto-udp" class="px-3 py-1 rounded-md font-medium transition text-slate-400 hover:text-white">UDP</button>
+            </div>
+          </div>
+
+          <!-- Port Range Controls -->
+          <div class="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Min Port</label>
+              <input type="number" id="input-min-port" value="8000" min="1" max="65535" 
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500 transition">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Max Port</label>
+              <input type="number" id="input-max-port" value="9999" min="1" max="65535"
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500 transition">
+            </div>
+          </div>
+        </div>
+
+        <!-- Generated Port Display & Action -->
+        <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center space-x-4">
+            <div class="text-3xl sm:text-4xl font-mono font-bold tracking-tight text-emerald-400" id="display-allocated-port">
+              ----
+            </div>
+            <div class="text-xs text-slate-400" id="port-details">
+              Ready to generate.<br>Click the button to roll.
+            </div>
+          </div>
+          
+          <div class="flex items-center space-x-2 w-full sm:w-auto">
+            <button id="btn-copy-port" disabled class="px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center space-x-1">
+              <span>📋 Copy</span>
+            </button>
+            <button id="btn-roll-port" class="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-semibold shadow-lg shadow-emerald-950/50 transition flex items-center justify-center space-x-1.5">
+              <span>🎲 Generate Port</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Port Checker Card -->
+      <div class="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+        <div>
+          <h2 class="text-base font-semibold text-white mb-1">Check Specific Port</h2>
+          <p class="text-xs text-slate-400 mb-4">Test if a desired port is already reserved</p>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Port Number</label>
+              <div class="flex space-x-2">
+                <input type="number" id="input-check-port" placeholder="e.g. 8080" min="1" max="65535"
+                  class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500 transition">
+                <button id="btn-check-port" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-medium transition">
+                  Check
+                </button>
+              </div>
+            </div>
+
+            <!-- Check Result Area -->
+            <div id="check-result-container" class="hidden p-3.5 rounded-xl border text-xs">
+              <div class="font-semibold flex items-center justify-between mb-1" id="check-result-title"></div>
+              <div class="text-slate-400" id="check-result-desc"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Summary Stats -->
+        <div class="pt-4 border-t border-slate-800/80 grid grid-cols-2 gap-2 text-center text-xs">
+          <div class="p-2.5 bg-slate-950/50 rounded-xl border border-slate-800/60">
+            <span class="block text-slate-400">Total Bound</span>
+            <span class="text-lg font-mono font-bold text-slate-200" id="stat-total-ports">-</span>
+          </div>
+          <div class="p-2.5 bg-slate-950/50 rounded-xl border border-slate-800/60">
+            <span class="block text-slate-400">Docker Mapped</span>
+            <span class="text-lg font-mono font-bold text-emerald-400" id="stat-docker-ports">-</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Ports Table -->
+    <div class="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-6 shadow-xl space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-base font-semibold text-white">Reserved & Listening Ports</h2>
+          <p class="text-xs text-slate-400">Discovered from active kernel sockets and Docker container configurations</p>
+        </div>
+
+        <!-- Table Filters -->
+        <div class="flex items-center space-x-2">
+          <input type="text" id="search-ports" placeholder="Filter port or container..." 
+            class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 transition w-44 sm:w-56">
+          <select id="filter-type" class="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-emerald-500">
+            <option value="all">All Sources</option>
+            <option value="docker">Docker Only</option>
+            <option value="system">System Only</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table Container -->
+      <div class="overflow-x-auto rounded-xl border border-slate-800/80">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-950/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
+            <tr>
+              <th class="px-4 py-3">Port</th>
+              <th class="px-4 py-3">Protocol</th>
+              <th class="px-4 py-3">Source / Container</th>
+              <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3">Host Binding</th>
+            </tr>
+          </thead>
+          <tbody id="ports-table-body" class="divide-y divide-slate-800/60 font-mono">
+            <tr>
+              <td colspan="5" class="px-4 py-8 text-center text-slate-500">Loading ports...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <footer class="border-t border-slate-800/60 py-4 text-center text-xs text-slate-500">
+    Port Scout &bull; Open Source Homelab Tool &bull; CanberraTinkerer
+  </footer>
+
+  <script src="./static/app.js"></script>
+</body>
+</html>
