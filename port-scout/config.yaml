@@ -1,7 +1,7 @@
 name: "Port Scout"
 slug: "port_scout"
 description: "Network port scanner and collision-free port allocator for homelabs"
-version: "1.0.1"
+version: "1.0.2"
 startup: services
 boot: auto
 arch:

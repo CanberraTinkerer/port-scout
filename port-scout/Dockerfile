@@ -3,17 +3,11 @@ FROM ${BUILD_FROM}
 
 WORKDIR /app
 
-# Upgrade base packages to avoid musl revision mismatch, then install python + dependencies
-RUN apk update \
-    && apk upgrade --no-cache \
-    && apk add --no-cache \
-        python3 \
-        py3-pip \
-        py3-psutil \
-        gcc \
-        musl-dev \
-        linux-headers \
-        python3-dev
+# Install python3, pip, and precompiled py3-psutil from Alpine repo (zero C-compilation)
+RUN apk add --no-cache \
+    python3 \
+    py3-pip \
+    py3-psutil
 
 COPY requirements.txt /app/
 RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
