@@ -3,14 +3,17 @@ FROM ${BUILD_FROM}
 
 WORKDIR /app
 
-# Install python3 and compilation packages
-RUN apk add --no-cache \
-    python3 \
-    py3-pip \
-    gcc \
-    musl-dev \
-    linux-headers \
-    python3-dev
+# Upgrade base packages to avoid musl revision mismatch, then install python + dependencies
+RUN apk update \
+    && apk upgrade --no-cache \
+    && apk add --no-cache \
+        python3 \
+        py3-pip \
+        py3-psutil \
+        gcc \
+        musl-dev \
+        linux-headers \
+        python3-dev
 
 COPY requirements.txt /app/
 RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
